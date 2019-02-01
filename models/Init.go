@@ -6,6 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
 	"os"
+	"github.com/aveyuan/syt/libs"
 )
 
 //设置一个全局的db方便其他函数调用
@@ -43,11 +44,19 @@ func Init()  {
 
 	if len(os.Args)>=2 && os.Args[1]=="install"{
 		log.Println("安装正在检查迁移数据库信息")
-		db.AutoMigrate(&User{},Client{},Ticket{})
+		db.AutoMigrate(&User{},&Client{},&Ticket{},&Satisfaction{},&Tkcontent{},&Tksource{})
 		createAdmin()
 	}
 
-}
+	//测试数据信息
+//	TClient()
+	////	Tsource()
+	////	TSatisfactions()
+	////	Tkcreates()
+	////	TCreateuser()
+	////	Tuser()
+	////	Tclist()
+	}
 
 //创建管理账户
 func createAdmin()  {
@@ -56,7 +65,8 @@ func createAdmin()  {
 	db.Where("username=?","admin").Find(&user)
 	//没有找到管理员账户则创建一个
 	if user.Nickname==""{
-		user = &User{Username:"admin",Password:"123456",Nickname:"管理员"}
+		pass,salt := libs.Password("123456")
+		user = &User{Username:"admin",Password:pass,Salt:salt,Nickname:"管理员"}
 		if err:=user.Add();err!=nil{
 			log.Println("用户添加失败")
 		}
