@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/sessions"
+	"github.com/appleboy/gin-jwt"
 	"github.com/aveyuan/syt/models"
 	"fmt"
 )
@@ -15,14 +15,15 @@ import (
 //创建工单
 //满意度评判
 func Home(c *gin.Context)  {
-	session := sessions.Default(c)
-	username := session.Get("username").(string)
+	claims := jwt.ExtractClaims(c)
+	username := claims["user"]
 	if username==""{
+		c.JSON(200,gin.H{"message":"没有用户信息"})
 		c.Abort()
 	}else {
-		var client models.Client
-		client.Username=username
-		cl,err := client.Detail()
+		var user models.User
+		user.Username=username.(string)
+		cl,err := user.Detail()
 		if err !=nil{
 			fmt.Println("用户信息获取有误")
 			c.Abort()

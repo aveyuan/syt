@@ -10,22 +10,31 @@ func Init()*gin.Engine  {
 	r := gin.Default()
 	//注册中间件
 	middleware.Init(r)
-	//注册静态文件
-	r.Static("/static", ("static/"))
+	//单独注册jwt中间件
+	authMiddleware:=middleware.Jwtmiddleware(r)
 	//把r给controller
 	controller.R = r
 
-	r.LoadHTMLGlob("views/**/*")
 	r.GET("/", func(c *gin.Context) {
 		c.String(200,"hello world")
 	})
 
-	r.GET("/login",controller.ClientLoginGet)
-	r.POST("/login",controller.ClientLoginPost)
-	r.GET("/admin/login",controller.UserLoginGet)
-	r.POST("/admin/login",controller.UserLoginPost)
+	r.POST("/reg",controller.ClientRegPost)
 
-	r.POST("/home",controller.Home)
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404,gin.H{"message":"404 Not founds"})
+	})
+
+	r.POST("/login", authMiddleware.LoginHandler)
+
+	auth := r.Group("/auth")
+	auth.Use(authMiddleware.MiddlewareFunc())
+	{
+		auth.GET("/home",controller.Home)
+		auth.GET("/detail",controller.UserTickets)
+		auth.GET("/listtk",controller.ListTickets)
+	}
 
 
 	return r

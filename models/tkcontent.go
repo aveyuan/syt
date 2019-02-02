@@ -9,7 +9,6 @@ type Tkcontent struct {
 	Content string //跟进内容
 	File	string //文件
 	UserID  uint //关联到跟进人
-	ClientID uint //关联到用户
 	Remarks string //备注
 }
 

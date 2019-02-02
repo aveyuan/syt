@@ -2,29 +2,11 @@ package models
 
 import (
 	"log"
-	"github.com/aveyuan/syt/libs"
 	"fmt"
 )
 
 
-//测试数据
-func TClient()  {
-	//测试客户添加
-	pass,salt := libs.Password("123456")
-	client := &Client{Username:"张三",Password:pass,Salt:salt,Phone1:"12345678901",Email:"zs@qq.com",Address:"重庆"}
-	if err := client.Add();err !=nil{
-		log.Print("添加客户失败")
-	}else {
-		log.Print("添加客户成功")
-	}
 
-	client1 := &Client{Username:"李四",Password:pass,Salt:salt,Phone1:"12345678901",Email:"zs@qq.com",Address:"重庆"}
-	if err := client1.Add();err !=nil{
-		log.Print("添加客户失败")
-	}else {
-		log.Print("添加客户成功")
-	}
-}
 
 //添加工单来源
 func Tsource()  {
@@ -66,16 +48,16 @@ func TSatisfactions()  {
 
 //创建工单
 func Tkcreates()  {
-	var client Client
-	db.First(&client)
+	var user User
+	db.First(&user)
 	//工单来源
 	tksource := &Tksource{Id:1}
 
 	//添加工单
 
 
-	tkc := &Tkcontent{Content:"需要帮助,我的电脑坏了",ClientID:client.ID}
-	tks := &Ticket{ClientID:client.ID,Status:1,TksourceId:tksource.Id,Contents:[]Tkcontent{*tkc}}
+	tkc := &Tkcontent{Content:"需要帮助,我的电脑坏了",UserID:user.ID}
+	tks := &Ticket{UserID:user.ID,Status:1,TksourceId:tksource.Id,Tkcontents:[]Tkcontent{*tkc}}
 	if err :=tks.Add();err !=nil{
 		log.Print("添加工单失败")
 	}else {
@@ -93,7 +75,7 @@ func Tuser()  {
 
 	var tk Ticket
 	db.First(&tk)
-	tk.Users=[]User{user1,user2}
+	tk.Solveusers=[]User{user1,user2}
 	tk.Status=3
 	if err := tk.Update();err !=nil{
 		fmt.Println("工单更新失败")
@@ -108,8 +90,7 @@ func TCreateuser()  {
 	db.Where("username=?","zhangsan").Find(&user)
 	//没有找到管理员账户则创建一个
 	if user.Nickname==""{
-		pass,salt := libs.Password("123456")
-		user = &User{Username:"zhangsan",Password:pass,Salt:salt,Nickname:"张三"}
+		user = &User{Username:"zhangsan",Password:"123456",Nickname:"张三"}
 		if err:=user.Add();err!=nil{
 			log.Println("用户添加失败")
 		}
@@ -118,14 +99,3 @@ func TCreateuser()  {
 
 }
 
-//客户列表
-func Tclist()  {
-	clint := &Client{}
-	cl,err := clint.List()
-	if err !=nil{
-		fmt.Println("客户列表获取失败")
-	}
-	for _,v := range *cl{
-		fmt.Println(v.Username)
-	}
-}
