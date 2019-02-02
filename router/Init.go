@@ -23,7 +23,7 @@ func Init()*gin.Engine  {
 
 
 	r.NoRoute(func(c *gin.Context) {
-		c.JSON(404,gin.H{"message":"404 Not founds"})
+		controller.ResJson(404,"Page Not Found",c)
 	})
 
 	r.POST("/login", authMiddleware.LoginHandler)
@@ -32,7 +32,7 @@ func Init()*gin.Engine  {
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
 		auth.GET("/home",controller.Home)
-		auth.GET("/detail",controller.UserTickets)
+		auth.GET("/usertickets",controller.UserTickets)
 		auth.GET("/listtk",controller.ListTickets)
 	}
 

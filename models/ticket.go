@@ -11,6 +11,7 @@ type Ticket struct {
 	gorm.Model
 	Tkcontents []Tkcontent //关联到跟进内容
 	UserID uint //关联创建工单的用户
+	Title string //工单主题
 	Solveusers []User `gorm:"many2many:user_solvetikets"` //关联支持用户
 	TksourceId uint //工单来源
 	SatisfactionId uint //工单满意度

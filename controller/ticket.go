@@ -1,9 +1,8 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/appleboy/gin-jwt"
 	"github.com/aveyuan/syt/models"
+	"github.com/gin-gonic/gin"
 )
 
 //工单控制器
@@ -13,20 +12,23 @@ func ListTickets(c *gin.Context)  {
 	ticktes := &models.Ticket{}
 	tickeslist,err := ticktes.List()
 	if err !=nil{
-		c.JSON(402,gin.H{"message":"工单信息获取有误"})
+		ResJson(402,"获取信息有误",c)
 	}
 	c.JSON(200,tickeslist)
 }
 
 //用户的工单
 func UserTickets(c *gin.Context)  {
-	claims := jwt.ExtractClaims(c)
-	username := claims["user"]
-	user := &models.User{Username:username.(string)}
-	//取得了用户的详细信息
-	userdetail,err := user.Detail()
-	if err !=nil{
-		c.JSON(402,gin.H{"message":"用户信息获取失败"})
+	user:=JwtUser(c)
+	tickets,err := user.UserTickets()
+	if err!=nil{
+		ResJson(402,"用户工单获取有误",c)
 	}
-	c.JSON(200,userdetail)
+	user.Tickets=tickets
+	c.JSON(200,user)
+}
+
+//创建工单
+func CreateTicket(c *gin.Context)  {
+
 }

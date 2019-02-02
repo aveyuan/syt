@@ -98,12 +98,20 @@ func (this *VliUser)Valid()error  {
 
 }
 
-//用户详情
+//用户详情,只有基本的用户信息
 func (this *User)Detail()(*User,error)  {
 	username := this.Username
 	var user User
 	db.Where("username=?",username).Find(&user)
-	db.Model(user).Association("Tickets").Find(&user.Tickets)
 	return &user,nil
 }
 
+//用户工单
+func (this *User)UserTickets()([]Ticket,error)  {
+	var tickets []Ticket
+	user,_ := this.Detail()
+	if err :=db.Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+		return tickets,err
+	}
+	return tickets,nil
+}
