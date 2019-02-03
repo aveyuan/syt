@@ -34,6 +34,8 @@ func Init()*gin.Engine  {
 		auth.GET("/home",controller.Home)
 		auth.GET("/usertickets",controller.UserTickets)
 		auth.GET("/listtk",controller.ListTickets)
+		auth.POST("/createtk",controller.CreateTicket)
+		auth.POST("/savetk",controller.SaveTicket)
 	}
 
 

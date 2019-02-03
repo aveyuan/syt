@@ -102,7 +102,9 @@ func (this *VliUser)Valid()error  {
 func (this *User)Detail()(*User,error)  {
 	username := this.Username
 	var user User
-	db.Where("username=?",username).Find(&user)
+	if err :=db.Where("username=?",username).Find(&user).Error;err !=nil{
+		return &user,err
+	}
 	return &user,nil
 }
 

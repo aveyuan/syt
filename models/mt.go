@@ -54,10 +54,7 @@ func Tkcreates()  {
 	tksource := &Tksource{Id:1}
 
 	//添加工单
-
-
-	tkc := &Tkcontent{Content:"需要帮助,我的电脑坏了",UserID:user.ID}
-	tks := &Ticket{UserID:user.ID,Status:1,TksourceId:tksource.Id,Tkcontents:[]Tkcontent{*tkc}}
+	tks := &TkCreate{User:user,Title:"电脑坏了",Tksource:tksource.Id}
 	if err :=tks.Add();err !=nil{
 		log.Print("添加工单失败")
 	}else {
