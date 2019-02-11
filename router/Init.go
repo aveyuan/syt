@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/aveyuan/syt/controller"
 	"github.com/aveyuan/syt/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 func Init()*gin.Engine  {
@@ -16,7 +16,7 @@ func Init()*gin.Engine  {
 	controller.R = r
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200,"hello world")
+		controller.ResJson(200,"Welcome",c)
 	})
 
 	r.POST("/reg",controller.ClientRegPost)
@@ -37,7 +37,6 @@ func Init()*gin.Engine  {
 		auth.POST("/createtk",controller.CreateTicket)
 		auth.POST("/savetk",controller.SaveTicket)
 	}
-
 
 	return r
 }

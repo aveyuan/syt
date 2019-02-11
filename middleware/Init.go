@@ -6,7 +6,7 @@ import "github.com/gin-gonic/gin"
 //没用用到了，直接使用jwt认证了
 func Init(r *gin.Engine)  {
 	//Csrfmiddleware(r)
-	//Corsmiddleware(r)
+	Corsmiddleware(r)
 	//Jwtmiddleware(r)
 
 }

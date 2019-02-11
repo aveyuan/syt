@@ -13,7 +13,7 @@ func ListTickets(c *gin.Context)  {
 	ticktes := &models.Ticket{}
 	tickeslist,err := ticktes.List()
 	if err !=nil{
-		ResJson(402,"获取信息有误",c)
+		ResJson(200,"获取信息有误",c)
 	}
 	//定义一个map用来获取里面的数据
 	tickmap := make([]map[string]interface{},len(tickeslist))
@@ -111,7 +111,7 @@ func SaveTicket(c *gin.Context)  {
 		if err := tksave.Update();err !=nil{
 			ResJson(402,"更新工单失败",c)
 		}else {
-			ResJson(402,"更新工单成功",c)
+			ResJson(200,"更新工单成功",c)
 		}
 	}
 }

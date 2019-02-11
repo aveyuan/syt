@@ -6,5 +6,7 @@ import (
 )
 
 func Corsmiddleware(r *gin.Engine)   {
-	r.Use(cors.Default())
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://127.0.0.1:8848"}
+	r.Use(cors.New(config))
 }
