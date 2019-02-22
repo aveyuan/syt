@@ -3,21 +3,39 @@ package controller
 import (
 	"github.com/aveyuan/syt/models"
 	"github.com/gin-gonic/gin"
-	"fmt"
+	"strconv"
 )
 
 //工单控制器
 
 //所有工单
+//可以根据用户和工单的状态来查询，1个添加，2个条件,系统级权限
 func ListTickets(c *gin.Context)  {
 	ticktes := &models.Ticket{}
-	tickeslist,err := ticktes.List()
+	statusq := c.Query("status")
+	useridq := c.Query("userid")
+	status,_ := strconv.Atoi(statusq)
+	userid,_ := strconv.Atoi(useridq)
+	search := c.Query("search")
+	var ticketslist []models.Ticket
+	var err error
+	if userid==0{
+		ticketslist,err = ticktes.List(status,search)
+	}else {
+		user,err := models.IdUser(userid)
+		if err !=nil{
+			ResJson(202,"用户信息错误",c)
+			c.Abort()
+		}
+		ticketslist,err =user.UserTickets(status,search)
+	}
+
 	if err !=nil{
-		ResJson(200,"获取信息有误",c)
+		ResJson(402,"获取信息有误",c)
 	}
 	//定义一个map用来获取里面的数据
-	tickmap := make([]map[string]interface{},len(tickeslist))
-	for k,v := range tickeslist{
+	tickmap := make([]map[string]interface{},len(ticketslist))
+	for k,v := range ticketslist{
 		//组合工单内容
 		ticket := make(map[string]interface{})
 		detail := v.Detail()
@@ -33,6 +51,7 @@ func ListTickets(c *gin.Context)  {
 		soveuser := make([]map[string]interface{},len(detail.Solveuser))
 		for k,v := range detail.Solveuser{
 			suser := make(map[string]interface{})
+			suser["id"]=v.ID
 			suser["username"]=v.Username
 			suser["nickname"]=v.Nickname
 			soveuser[k]=suser
@@ -44,9 +63,11 @@ func ListTickets(c *gin.Context)  {
 }
 
 //用户的工单
+//只能看到用户自己的工单
 func UserTickets(c *gin.Context)  {
 	user:=JwtUser(c)
-	tickeslist,err := user.UserTickets()
+	search := c.Query("search")
+	tickeslist,err := user.UserTickets(0,search)
 	if err !=nil{
 		ResJson(402,"获取用户工单失败",c)
 	}
@@ -68,6 +89,7 @@ func UserTickets(c *gin.Context)  {
 		soveuser := make([]map[string]interface{},len(detail.Solveuser))
 		for k,v := range detail.Solveuser{
 			suser := make(map[string]interface{})
+			suser["id"]=v.ID
 			suser["username"]=v.Username
 			suser["nickname"]=v.Nickname
 			soveuser[k]=suser
@@ -95,23 +117,27 @@ func CreateTicket(c *gin.Context)  {
 }
 
 //更新/分配工单
-func SaveTicket(c *gin.Context)  {
-	var tksave models.TkSave
+func UpdateTicket(c *gin.Context)  {
+	tkidp := c.Param("id")
+	tkid,_ := strconv.Atoi(tkidp) //需要更新的工单地址
+	var tksave models.TkSave //绑定得到更新内容
 	if err := c.ShouldBindJSON(&tksave);err!=nil{
-		fmt.Println(err)
-		ResJson(402,"创建工单参数有误",c)
+		ResJson(200,"创建工单参数有误",c)
 	}else {
-		var user []models.User
-		thisusers := tksave.Solveuser
+		//fmt.Println(tksave.Solveuser)
+		var user []models.User //取得用户参数
+		tksave.ID=tkid
+		thisusers := tksave.Solveuser //将用户信息分解出来
 		for _,v := range thisusers{
 			u,_ := v.Detail()
 			user = append(user,*u)
 		}
-		fmt.Println(user)
+		//fmt.Println(user) //得到分配用户数
+		tksave.Solveuser=user
 		if err := tksave.Update();err !=nil{
 			ResJson(402,"更新工单失败",c)
 		}else {
-			ResJson(200,"更新工单成功",c)
+			ResJson(402,"更新工单成功",c)
 		}
 	}
 }

@@ -1,9 +1,9 @@
 package router
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/aveyuan/syt/controller"
 	"github.com/aveyuan/syt/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 func Init()*gin.Engine  {
@@ -16,11 +16,8 @@ func Init()*gin.Engine  {
 	controller.R = r
 
 	r.GET("/", func(c *gin.Context) {
-		controller.ResJson(200,"Welcome",c)
+		c.String(200,"hello world")
 	})
-
-	r.POST("/reg",controller.ClientRegPost)
-
 
 	r.NoRoute(func(c *gin.Context) {
 		controller.ResJson(404,"Page Not Found",c)
@@ -28,14 +25,22 @@ func Init()*gin.Engine  {
 
 	r.POST("/login", authMiddleware.LoginHandler)
 
-	auth := r.Group("/auth")
-	auth.Use(authMiddleware.MiddlewareFunc())
+	//用户路由组
+	user := r.Group("/user")
+	user.Use(authMiddleware.MiddlewareFunc())
 	{
-		auth.GET("/home",controller.Home)
-		auth.GET("/usertickets",controller.UserTickets)
-		auth.GET("/listtk",controller.ListTickets)
-		auth.POST("/createtk",controller.CreateTicket)
-		auth.POST("/savetk",controller.SaveTicket)
+		user.POST("/reg",controller.UserRgeist)
+		user.GET("/home",controller.UserHome)
+		user.GET("/tickets",controller.UserTickets)
+
+	}
+	//工单路由组
+	ticket:=r.Group("/ticket")
+	ticket.Use(authMiddleware.MiddlewareFunc())
+	{
+		ticket.GET("/listtk",controller.ListTickets)
+		ticket.POST("/createtk",controller.CreateTicket)
+		ticket.POST("/updatetk/:id",controller.UpdateTicket)
 	}
 
 	return r

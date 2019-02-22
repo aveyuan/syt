@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
+	"fmt"
 )
 
 //工单
@@ -14,7 +15,7 @@ type Ticket struct {
 	Solveusers []User `gorm:"many2many:user_solvetikets"` //关联支持用户
 	TksourceId uint //工单来源
 	SatisfactionId uint //工单满意度
-	Status int  `gorm:"default:'1'"`//状态 0.结案,1.新的,2跟进中,3.已解决,4.挂起
+	Status int  `gorm:"default:'2'"`//状态 1.结案,2.新的,3跟进中,4.已解决,5.挂起
 
 }
 
@@ -38,17 +39,18 @@ type TkCreate struct {
 //更新工单主体内容
 //包含工单的来源，处理人，状态
 type TkSave struct {
-	ID uint  `json:"id" binding:"required"`//工单ID
+	ID 	int
 	TksourceId uint `json:"tksourceid" binding:"required"`  //工单来源
 	Status int  `json:"Status" binding:"required"`//工单状态
-	Solveuser	[]User `json:"solveuser"`
+	Solveuser	[]User `json:"solveuser"` //工单处理人
 }
 
-//更新用户信息
+//更新工单信息
 func (this *TkSave)Update()error  {
 	var tk Ticket
-	db.Find(this.ID).First(&tk)
+	db.Find(this.ID).First(&tk) //获取到工单ID
 	//tk.Solveusers=this.Solveuser
+	fmt.Println(this.Solveuser)
 	if err :=db.Model(&tk).Updates(Ticket{Status:this.Status, TksourceId: this.TksourceId,Solveusers:this.Solveuser}).Error;err !=nil{
 		return err
 	}
@@ -100,10 +102,23 @@ func (this *Ticket)Detail()(*Tkbase)  {
 }
 
 //显示所有工单
-func (this *Ticket)List()([]Ticket,error)  {
+//可以根据工单的状态来进行筛选
+func (this *Ticket)List(status int,search string)([]Ticket,error)  {
+	//status=0为显示所有，其他的根据id来选
 	var tickets []Ticket
-	if err := db.Find(&tickets).Order("ID desc").Error;err !=nil{
-		return tickets,err
+	if status==0&&search==""{
+		if err := db.Find(&tickets).Order("ID desc").Error;err !=nil{
+			return tickets,err
+		}
+	}else if status==0&&search!="" {
+		if err := db.Where("title LIKE ?","%"+search+"%").Find(&tickets).Order("ID desc").Error;err !=nil{
+			return tickets,err
+		}
+	}else {
+		if err := db.Where("status = ?",status).Where("title LIKE ?","%"+search+"%").Find(&tickets).Order("ID desc").Error;err !=nil{
+			return tickets,err
+		}
 	}
+
 	return tickets,nil
 }

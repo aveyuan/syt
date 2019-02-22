@@ -58,6 +58,14 @@ type Jwtuser struct {
 	Username string
 }
 
+func IdUser(user int)(*User,error)  {
+	var u User
+	if err :=db.First(&u,user).Error;err !=nil{
+		return &u,err
+	}
+	return &u,nil
+}
+
 //新增用户
 func (this *User)Add()error  {
 	password,salt := libs.Password(this.Password)
@@ -109,11 +117,29 @@ func (this *User)Detail()(*User,error)  {
 }
 
 //用户工单
-func (this *User)UserTickets()([]Ticket,error)  {
+//将这个函数进行复用，根据用户传入工单状态，返回工单信息
+func (this *User)UserTickets(status int,search string)([]Ticket,error)  {
 	var tickets []Ticket
 	user,_ := this.Detail()
-	if err :=db.Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
-		return tickets,err
+	//传入0表示查询所有的数据，不筛选
+	//传入8表示查询非结案工单，表示进行中的工单
+	if status==0 && search==""{
+		if err :=db.Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+			return tickets,err
+		}
+	}else if(status==8){
+		if err :=db.Not("status = ?",0).Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+			return tickets,err
+		}
+	}else if status==0 && search!="" {
+		if err :=db.Where("title LIKE ?","%"+search+"%").Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+			return tickets,err
+		}
+	}else {
+		if err :=db.Where("status = ?",status).Where("title LIKE ?","%"+search+"%").Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+			return tickets,err
+		}
 	}
+
 	return tickets,nil
 }
