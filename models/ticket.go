@@ -1,8 +1,8 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
 	"fmt"
+	"github.com/jinzhu/gorm"
 )
 
 //工单
@@ -48,10 +48,15 @@ type TkSave struct {
 //更新工单信息
 func (this *TkSave)Update()error  {
 	var tk Ticket
-	db.Find(this.ID).First(&tk) //获取到工单ID
-	//tk.Solveusers=this.Solveuser
-	fmt.Println(this.Solveuser)
-	if err :=db.Model(&tk).Updates(Ticket{Status:this.Status, TksourceId: this.TksourceId,Solveusers:this.Solveuser}).Error;err !=nil{
+
+	if err :=db.Where("id = ?",this.ID).Model(&tk).Updates(Ticket{Status:this.Status, TksourceId: this.TksourceId}).Error;err !=nil{
+		return err
+	}
+
+	//再次查找工单，来更新关系,这里有个坑，必须再次查询才行,不能利用上面的updates
+	db.Where("id = ?",this.ID).First(&tk)
+	if err := db.Model(&tk).Association("Solveusers").Replace(&this.Solveuser).Error;err!=nil{
+		fmt.Print(err)
 		return err
 	}
 	return nil
@@ -93,7 +98,6 @@ func (this *Ticket)Detail()(*Tkbase)  {
 	db.Model(&ticket).Related(&satis).Find(&satis)
 	db.Model(&ticket).Related(&ticket.Tkcontents).Find(&tkcontent)
 	db.Model(&ticket).Related(&user).Find(&user)
-	db.Model(&ticket).Related(&ticket.Solveusers).Find(&solveuser)
 	db.Model(&ticket).Association("solveusers").Find(&solveuser)
 
 	//组合数据

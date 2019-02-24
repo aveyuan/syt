@@ -101,6 +101,7 @@ func UserTickets(c *gin.Context)  {
 }
 
 //创建工单
+//这个是普通用户创建工单，请求者都不可以选的这种
 func CreateTicket(c *gin.Context)  {
 	user:=JwtUser(c)
 	var tkcr models.TkCreate
@@ -116,15 +117,19 @@ func CreateTicket(c *gin.Context)  {
 	}
 }
 
+//系统创建工单
+//由管理员创建的工单，可以选择用户，工单来源，状态，等
+//还没想好怎么写
+
 //更新/分配工单
 func UpdateTicket(c *gin.Context)  {
 	tkidp := c.Param("id")
 	tkid,_ := strconv.Atoi(tkidp) //需要更新的工单地址
 	var tksave models.TkSave //绑定得到更新内容
 	if err := c.ShouldBindJSON(&tksave);err!=nil{
-		ResJson(200,"创建工单参数有误",c)
+		ResJson(200,"更新工单参数有误",c)
 	}else {
-		//fmt.Println(tksave.Solveuser)
+
 		var user []models.User //取得用户参数
 		tksave.ID=tkid
 		thisusers := tksave.Solveuser //将用户信息分解出来
@@ -132,7 +137,7 @@ func UpdateTicket(c *gin.Context)  {
 			u,_ := v.Detail()
 			user = append(user,*u)
 		}
-		//fmt.Println(user) //得到分配用户数
+		//更新工单
 		tksave.Solveuser=user
 		if err := tksave.Update();err !=nil{
 			ResJson(402,"更新工单失败",c)

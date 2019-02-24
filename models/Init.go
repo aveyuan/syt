@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/go-ini/ini"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -18,6 +19,10 @@ func Init()  {
 	if err !=nil{
 		log.Fatal("配置文件读取出错,请检查")
 		return
+	}
+	debug := ini.Section("").Key("debug").String()
+	if debug=="false"{
+		gin.SetMode(gin.ReleaseMode)
 	}
 	db_user := ini.Section("").Key("db_user").String()
 	db_pass := ini.Section("").Key("db_pass").String()
