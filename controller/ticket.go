@@ -100,6 +100,44 @@ func UserTickets(c *gin.Context)  {
 	c.JSON(200,tickmap)
 }
 
+//正在进行的工单
+func UserTicketsing(c *gin.Context)  {
+	user:=JwtUser(c)
+	search := c.Query("search")
+	tickeslist,err := user.UserTickets(8,search)
+	if err !=nil{
+		ResJson(402,"获取用户工单失败",c)
+	}
+	//定义一个map用来获取里面的数据
+	tickmap := make([]map[string]interface{},len(tickeslist))
+	for k,v := range tickeslist{
+		//组合工单内容
+		ticket := make(map[string]interface{})
+		detail := v.Detail()
+		ticket["ID"]=v.ID
+		ticket["User"]=detail.User.Nickname
+		ticket["Username"]=detail.User.Username
+		ticket["Title"]=v.Title
+		ticket["Tksource"]=detail.Tksource.Content
+		ticket["Satisfaction"]=detail.Satisfaction.Content
+		ticket["Status"]=v.Status
+		ticket["CreateAt"]=v.CreatedAt
+		ticket["UpdateAt"]=v.UpdatedAt
+		soveuser := make([]map[string]interface{},len(detail.Solveuser))
+		for k,v := range detail.Solveuser{
+			suser := make(map[string]interface{})
+			suser["id"]=v.ID
+			suser["username"]=v.Username
+			suser["nickname"]=v.Nickname
+			soveuser[k]=suser
+		}
+		ticket["solveuser"]=soveuser
+		tickmap[k]=ticket
+	}
+	c.JSON(200,tickmap)
+}
+
+
 //创建工单
 //这个是普通用户创建工单，请求者都不可以选的这种
 func CreateTicket(c *gin.Context)  {

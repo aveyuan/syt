@@ -29,6 +29,7 @@ type Tkbase struct {
 	Solveuser []User
 }
 
+
 //创建工单时所需要的数据
 type TkCreate struct {
 	User User `json:"-" binding:"required"`  //哪个用户提起的工单

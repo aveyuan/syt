@@ -31,7 +31,14 @@ func Init()*gin.Engine  {
 	{
 		user.POST("/reg",controller.UserRgeist)
 		user.GET("/home",controller.UserHome)
-		user.GET("/tickets",controller.UserTickets)
+		user.GET("/tickets",controller.UserTickets) //用户所有的工单列表
+		user.GET("/ticketsing",controller.UserTicketsing) //用户进行中的工单列表
+		user.GET("/ticket/:id",controller.UserTicket) //用户工单详情
+		user.PUT("/ticket/:id",controller.UserTicketClose) //关闭用户工单
+		user.PUT("/ticket/:id/re",controller.UserTicketRe) //回复工单
+		user.GET("/info",controller.UserInfo) //用户详细信息
+		user.PUT("/info",controller.UserUpdate) //更新用户详细信息
+		user.PUT("/chpass",controller.UserChpass) //更新用户详细信息
 
 	}
 	//工单路由组

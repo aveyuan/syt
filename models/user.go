@@ -5,10 +5,11 @@ import (
 	"errors"
 	"github.com/aveyuan/syt/libs"
 	"time"
+	"fmt"
 )
 
 type User struct {
-	gorm.Model
+	gorm.Model `json:"-"`
 	Username string  //账户名称
 	Password string `json:"-"`//密码
 	Salt	string  `json:"-"`//密码加盐
@@ -18,15 +19,15 @@ type User struct {
 	Token string `json:"-"`//token
 	Phone1 string //电话1
 	Phone2 string //电话2
-	LastTime time.Time //最后一次登录时间
+	LastTime time.Time `json:"-"` //最后一次登录时间
 	Lastip string `json:"-"`//最后一次登录IP
-	Tkcontents []Tkcontent //关联工单内容
-	Solvetickets []Ticket `gorm:"many2many:user_solvetikets"` //解决的工单
-	Tickets []Ticket  //创建的工单
-	Role []Role `gorm:"many2many:user_role"`
+	Tkcontents []Tkcontent `json:"-"`//关联工单内容
+	Solvetickets []Ticket `gorm:"many2many:user_solvetikets" json:"-"` //解决的工单
+	Tickets []Ticket  `json:"-"`//创建的工单
+	Role []Role `gorm:"many2many:user_role" json:"-"`
 }
 
-//为了避免密码暴露，在登录验证的时候使用VliUser
+//为了避免密码暴露，在登录,注册验证的时候使用VliUser
 type VliUser struct {
 	Username string `json:"username"  binding:"required"` //账户名称
 	Password string `json:"password"  binding:"required"`//密码
@@ -37,6 +38,25 @@ type VliUser struct {
 	Lastip string //最后一次登录IP
 }
 
+//为修改密码设计的结构
+type Password struct {
+	Password string `json:"password" binding:"required"` //密码
+	RePassword string `json:"repassword" binding:"required"` //重复密码
+	Salt string //加盐字段
+	Username string //用户
+}
+
+//修改密码
+func (this *Password)Update()error  {
+	var user User
+	password,salt := libs.Password(this.Password)
+	this.Password=password
+	this.Salt=salt
+	if err :=db.Model(&user).Where("username = ?",this.Username).Update(User{Password:this.Password,Salt:this.Salt}).Error;err !=nil{
+		return err
+	}
+	return nil
+}
 
 //用户注册
 func (this *VliUser)Reg()error  {
@@ -79,7 +99,8 @@ func (this *User)Add()error  {
 
 //用户信息修改
 func (this *User)Update()error  {
-	if err :=db.Save(this).Error;err!=nil{
+	var user User
+	if err :=db.Model(&user).Where("username = ?",this.Username).Update(User{Nickname:this.Nickname,Email:this.Email,Avatar:this.Avatar,Phone1:this.Phone1,Phone2:this.Phone2}).Error;err !=nil{
 		return err
 	}
 	return nil
@@ -127,11 +148,15 @@ func (this *User)UserTickets(status int,search string)([]Ticket,error)  {
 		if err :=db.Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
 			return tickets,err
 		}
-	}else if(status==8){
-		if err :=db.Not("status = ?",0).Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
+	}else if(status==8 && search==""){
+		if err :=db.Not("status = ?",1).Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
 			return tickets,err
 		}
-	}else if status==0 && search!="" {
+	}else if(status==8&&search!="") {
+		if err := db.Not("status = ?",1).Where("title LIKE ?","%"+search+"%").Model(user).Association("Tickets").Find(&tickets).Error;err !=nil{
+			return tickets,err
+		}
+	} else if status==0 && search!="" {
 		if err :=db.Where("title LIKE ?","%"+search+"%").Model(user).Association("Tickets").Find(&tickets).Error;err!=nil{
 			return tickets,err
 		}
@@ -142,4 +167,34 @@ func (this *User)UserTickets(status int,search string)([]Ticket,error)  {
 	}
 
 	return tickets,nil
+}
+
+//关闭工单
+func (this *Ticket)UserTicketClose(username string)error {
+	var tk Ticket
+	var user User
+
+
+	//先查询这个工单的提出人者与当前用户是否匹配，如果不匹配表示这个用户无法关闭别人的工单
+	//db.Model(&user).Related(&user.Emails).Find(&user.Emails)
+
+	//用户匹配进行修改
+	if err := db.Where("id = ?",this.ID).First(&tk).Error;err !=nil{
+		return err
+	}
+
+	if err := db.Model(&tk).Related(&user).Find(&user).Error;err !=nil{
+		return err
+	}
+
+	if username==user.Username{
+		if err := db.Model(&tk).Update(Ticket{Status:1}).Error;err !=nil{
+				fmt.Println("关闭工单出错",err)
+				return err
+		}else {
+			return nil
+		}
+	}else {
+		return errors.New("用户不是工单的提起者")
+	}
 }
