@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
-func Corsmiddleware(r *gin.Engine)   {
+func Corsmiddleware(r *gin.Engine) {
 	r.Use(cors.Default())
 }

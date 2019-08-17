@@ -1,14 +1,14 @@
 package middleware
 
 import (
-	"time"
+	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/aveyuan/syt/models"
 	"github.com/gin-gonic/gin"
 	"log"
-	"github.com/appleboy/gin-jwt"
-	"github.com/aveyuan/syt/models"
+	"time"
 )
 
-func Jwtmiddleware(r *gin.Engine)*jwt.GinJWTMiddleware  {
+func Jwtmiddleware(r *gin.Engine) *jwt.GinJWTMiddleware {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "test zone",
 		Key:         []byte("secret key"),
@@ -20,7 +20,7 @@ func Jwtmiddleware(r *gin.Engine)*jwt.GinJWTMiddleware  {
 			if v, ok := data.(*models.Jwtuser); ok {
 				return jwt.MapClaims{
 					//定义存储的内容
-					"user" : v.Username,
+					"user": v.Username,
 				}
 			}
 			return jwt.MapClaims{}
@@ -38,9 +38,9 @@ func Jwtmiddleware(r *gin.Engine)*jwt.GinJWTMiddleware  {
 			if err := c.ShouldBindJSON(&user); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
-			user.Lastip=c.ClientIP()
-			if err := user.Valid();err ==nil {
-				return &models.Jwtuser{Username:user.Username}, nil
+			user.Lastip = c.ClientIP()
+			if err := user.Valid(); err == nil {
+				return &models.Jwtuser{Username: user.Username}, nil
 			}
 
 			return nil, jwt.ErrFailedAuthentication
@@ -48,7 +48,7 @@ func Jwtmiddleware(r *gin.Engine)*jwt.GinJWTMiddleware  {
 		//授权信息，定义用户可以访问到哪些资源
 		Authorizator: func(data interface{}, c *gin.Context) bool {
 			//if v, ok := data.(*models.Jwtuser); ok && v.Username == "ww" {
-			if _, ok := data.(*models.Jwtuser); ok  {
+			if _, ok := data.(*models.Jwtuser); ok {
 				return true
 			}
 
@@ -62,9 +62,9 @@ func Jwtmiddleware(r *gin.Engine)*jwt.GinJWTMiddleware  {
 			})
 		},
 		//验证信息
-		TokenLookup: "header: Authorization, query: token, cookie: jwt",
+		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName: "Bearer",
-		TimeFunc: time.Now,
+		TimeFunc:      time.Now,
 	})
 
 	if err != nil {

@@ -1,12 +1,11 @@
 package libs
 
 import (
-	"math/rand"
-	"time"
 	"crypto/md5"
 	"fmt"
+	"math/rand"
+	"time"
 )
-
 
 func Md5(buf []byte) string {
 	hash := md5.New()
@@ -25,8 +24,6 @@ func SizeFormat(size float64) string {
 	return fmt.Sprintf("%.2f %s", size, units[n])
 }
 
-
-
 func Password(pwdO string) (pwd string, salt string) {
 	salt = GetRandomString(4)
 	defaultPwd := "CQ123456"
@@ -36,8 +33,6 @@ func Password(pwdO string) (pwd string, salt string) {
 	pwd = Md5([]byte(defaultPwd + salt))
 	return pwd, salt
 }
-
-
 
 //生成随机字符串
 func GetRandomString(lens int) string {
